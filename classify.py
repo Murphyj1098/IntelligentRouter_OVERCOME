@@ -12,7 +12,7 @@ def flow():
     # Redirct interface name and MAC address to /dev/null
     # grep to only keep lines with per-host data
     # Split each line into entry in list
-    iftop = "iftop -t -c conf/.iftoprc -s 1 2>/dev/null | grep -A 1 -E '^   [0-9]'"
+    iftop = "iftop -t -c .iftoprc -s 1 2>/dev/null | grep -A 1 -E '^   [0-9]'"
     proc_out = subprocess.run(args=iftop, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
     top_list = proc_out.stdout.split("\n")
 
@@ -54,8 +54,8 @@ def flow():
         down_rate = down_list[2]
 
         # Standardize units
-        unit(up_rate)
-        unit(down_rate)
+        up_rate = unit(up_rate)
+        down_rate = unit(down_rate)
 
         # Store data
         host_data = [up_rate, down_rate]
@@ -77,9 +77,17 @@ def priority():
         # If UP > x && Down > y: Prio 3
 
 
+# Strip unit, standardize to Kbps
 def unit(measure):
-    return None
-
+    if "Mb" in measure:
+        ret = float(measure.strip("Mb")) * 1024
+        return ret
+    elif "Kb" in measure:
+        ret = float(measure.strip("Kb"))
+        return ret
+    elif "b" in measure:
+        ret = float(measure.strip("b")) / 1024
+        return ret
 
 
 def main():
