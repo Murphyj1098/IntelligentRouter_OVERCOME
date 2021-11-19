@@ -1,7 +1,8 @@
 #!/usr/local/bin/python3.8
 
-import os
+import subprocess
 from time import sleep
+
 
 def flow():
     # Run iftop
@@ -12,9 +13,9 @@ def flow():
     # grep to only keep lines with per-host data
     # Split each line into entry in list
     iftop = "iftop -t -c conf/.iftoprc -s 1 2>/dev/null | grep -A 1 -E '^   [0-9]'"
-    mes = os.popen(iftop).read()
-    top_list = mes.split("\n")
-    
+    proc_out = subprocess.run(args=iftop, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+    top_list = proc_out.stdout.split("\n")
+
     # Remove blank lines from list
     while '' in top_list:
         top_list.remove('')
@@ -24,8 +25,12 @@ def flow():
     count = len(top_list)
 
     # Dictionary to hold host information, ingoing, and outgoing traffic
-    host_dict = {}
+    global host_dict
+    global host_list
     
+    host_dict = {}
+    host_list = []
+
     #
     # For each host upload/download pair, extract information into below format
     #
@@ -48,9 +53,39 @@ def flow():
         up_rate = upload_list[3]
         down_rate = down_list[2]
 
-        print("IP Address: " + host_ip)
-        print("Upload (2 second average): " + up_rate + "ps")
-        print("Download (2 second average): " + down_rate + "ps")
+        # Standardize units
+        unit(up_rate)
+        unit(down_rate)
 
-flow()
+        # Store data
+        host_data = [up_rate, down_rate]
+        host_dict[host_ip] = host_data
+        host_list.append(host_ip)
+        
+
+def priority():
+    # Classify each host's priority
+    for ip in host_list:
+        bandwidth = host_dict[ip]
+
+        print(ip)
+        print(bandwidth)
+
+        # If Up < x && Down < u: Prio 0
+        # If Up > x && Down < y: Prio 1
+        # If Up < x && Down > y: Prio 2
+        # If UP > x && Down > y: Prio 3
+
+
+def unit(measure):
+    return None
+
+
+
+def main():
+    flow()
+    priority()
+
+if __name__ == '__main__':
+    main()
 
