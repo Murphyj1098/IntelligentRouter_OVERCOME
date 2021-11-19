@@ -11,7 +11,7 @@ def flow():
     # Redirct interface name and MAC address to /dev/null
     # grep to only keep lines with per-host data
     # Split each line into entry in list
-    iftop = "iftop -t -c .iftoprc -s 1 2>/dev/null | grep -A 1 -E '^   [0-9]'"
+    iftop = "iftop -t -c conf/.iftoprc -s 1 2>/dev/null | grep -A 1 -E '^   [0-9]'"
     mes = os.popen(iftop).read()
     top_list = mes.split("\n")
     
