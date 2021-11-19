@@ -1,0 +1,6 @@
+hide-destination: yes
+dns-resolution: no
+port-resolution: no
+promiscuous: no
+port-display: off
+show-totals: no
