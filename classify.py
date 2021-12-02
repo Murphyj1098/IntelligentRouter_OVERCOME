@@ -8,11 +8,12 @@ def flow():
     # Run iftop
     # Arguments: -t, text mode (remove ncurses)
     #            -c, configuration input file
+    #            -s #, measure for # seconds
     #
     # Redirct interface name and MAC address to /dev/null
     # grep to only keep lines with per-host data
     # Split each line into entry in list
-    iftop = "iftop -t -c .iftoprc -s 1 2>/dev/null | grep -A 1 -E '^   [0-9]'"
+    iftop = "iftop -t -c .iftoprc -s 2 2>/dev/null | grep -A 1 -E '^   [0-9]'"
     proc_out = subprocess.run(args=iftop, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
     top_list = proc_out.stdout.split("\n")
 
