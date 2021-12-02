@@ -1,4 +1,5 @@
-hide-destination: yes
+hide-source: yes
+hide-destination: no
 dns-resolution: no
 port-resolution: no
 promiscuous: no

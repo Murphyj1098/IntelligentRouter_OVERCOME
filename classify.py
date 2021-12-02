@@ -39,8 +39,8 @@ def flow():
     #   <ip addr> |   Mbps   |   Mbps
     #      ""     |    ""    |    ""
     for i in range(int(count/2)):
-        upload_list = top_list[i*2].split(" ")
-        down_list = top_list[(i*2)-1].split(" ")
+        down_list = top_list[i*2].split(" ")
+        upload_list = top_list[(i*2)-1].split(" ")
 
         while '' in upload_list:
             upload_list.remove('')
@@ -48,10 +48,9 @@ def flow():
         while '' in down_list:
             down_list.remove('')
 
-        
-        host_ip = upload_list[1]
-        up_rate = upload_list[3]
-        down_rate = down_list[2]
+        host_ip = upload_list[0]
+        up_rate = upload_list[2]
+        down_rate = down_list[3]
 
         # Standardize units
         up_rate = unit(up_rate)
