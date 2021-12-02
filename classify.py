@@ -8,12 +8,12 @@ def flow():
     # Run iftop
     # Arguments: -t, text mode (remove ncurses)
     #            -c, configuration input file
-    #            -s #, measure for # seconds
+    #            -s #, measure for # seconds (3 seconds in this case as the 2 second avg is read)
     #
     # Redirct interface name and MAC address to /dev/null
     # grep to only keep lines with per-host data
     # Split each line into entry in list
-    iftop = "iftop -t -c .iftoprc -s 2 2>/dev/null | grep -A 1 -E '^   [0-9]'"
+    iftop = "iftop -t -c .iftoprc -s 3 2>/dev/null | grep -A 1 -E '^   [0-9]'"
     proc_out = subprocess.run(args=iftop, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
     top_list = proc_out.stdout.split("\n")
 
@@ -51,7 +51,7 @@ def flow():
 
         host_ip = upload_list[0]
         up_rate = upload_list[2]
-        down_rate = down_list[2]
+        down_rate = down_list[3]
 
         # Standardize units
         up_rate = unit(up_rate)
@@ -75,6 +75,7 @@ def priority():
         # If Up > x && Down < y: Prio 1
         # If Up < x && Down > y: Prio 2
         # If UP > x && Down > y: Prio 3
+        # TODO: Consider special file I/o priorities (since they can eat as much bandwidth as possible)
 
 
 # Strip unit, standardize to Kbps
