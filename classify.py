@@ -51,7 +51,7 @@ def flow():
 
         host_ip = upload_list[0]
         up_rate = upload_list[2]
-        down_rate = down_list[3]
+        down_rate = down_list[2]
 
         # Standardize units
         up_rate = unit(up_rate)
