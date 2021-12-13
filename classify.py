@@ -1,56 +1,68 @@
 #!/usr/local/bin/python3.8
 
+import re
 import subprocess
 from time import sleep
 
 
+# Get bandwidth data from iftop and parse
 def flow():
     # Run iftop
     # Arguments: -t, text mode (remove ncurses)
     #            -c, configuration input file
-    #            -s #, measure for # seconds (3 seconds in this case as the 2 second avg is read)
+    #            -s #, measure for # seconds
     #
-    # Redirct interface name and MAC address to /dev/null
-    # grep to only keep lines with per-host data
-    # Split each line into entry in list
-    iftop = "iftop -t -c .iftoprc -s 3 2>/dev/null | grep -A 1 -E '^   [0-9]'"
-    proc_out = subprocess.run(args=iftop, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+    # Redirect stderr to /dev/null
+    # Take stdout output and split each line into list
+    iftop = "iftop -t -c .iftoprc -s 3"
+    proc_out = subprocess.run(args=iftop, shell=True, universal_newlines=True,
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     top_list = proc_out.stdout.split("\n")
 
-    # Remove blank lines from list
-    while '' in top_list:
-        top_list.remove('')
+    # Trim list to only contain relevant lines of data (data with per IP bandwidth)
+    data_list = []
+
+    for i in range(len(top_list)):
+        if re.search('^   [0-9]', top_list[i]):
+            data_list.append(top_list[i])
+            data_list.append(top_list[i+1])
+            i+1
 
     # Count = 2 * number of hosts
-    # Two lines per host (one up, one down)
-    count = len(top_list)
+    # Two lines per host (one upload, one download)
+    count = len(data_list)
+    
+    # If list is empty, no data to work on
+    if count < 2:
+        return -1
 
-    # Dictionary to hold host information, ingoing, and outgoing traffic
+
+    # Dictionary to hold host information, in-coming, and out-going traffic
     global host_dict
     global host_list
-    
+
     host_dict = {}
     host_list = []
 
     #
-    # For each host upload/download pair, extract information into below format
+    # For each host upload/download pair, extract information into format below
     #
-    #     Host    |  Up Rate | Down Rate
-    #   <ip addr> |   Mbps   |   Mbps
-    #   <ip addr> |   Mbps   |   Mbps
-    #      ""     |    ""    |    ""
+    #     Host     |  Up Rate | Down Rate
+    #   <ip_addr>  |   Mbps   |  Mbps
+    #   <ip_addr>  |   Mbps   |  Mbps
+    #      ""      |    ""    |   ""
     for i in range(int(count/2)):
-        down_list = top_list[i*2].split(" ")
-        upload_list = top_list[(i*2)-1].split(" ")
+        down_list = data_list[i*2].split(" ")
+        up_list = data_list[(i*2)-1].split(" ")
 
-        while '' in upload_list:
-            upload_list.remove('')
+        while '' in up_list:
+            up_list.remove('')
 
         while '' in down_list:
             down_list.remove('')
-
-        host_ip = upload_list[0]
-        up_rate = upload_list[2]
+        
+        host_ip = up_list[0]
+        up_rate = up_list[2]
         down_rate = down_list[3]
 
         # Standardize units
@@ -61,21 +73,21 @@ def flow():
         host_data = [up_rate, down_rate]
         host_dict[host_ip] = host_data
         host_list.append(host_ip)
-        
 
+
+# Classify each host's priority
 def priority():
-    # Classify each host's priority
     for ip in host_list:
         bandwidth = host_dict[ip]
 
-        print(ip)
+        print (ip)
         print(bandwidth)
 
-        # If Up < x && Down < u: Prio 0
+        # If Up < x && Down < y: Prio 0
         # If Up > x && Down < y: Prio 1
         # If Up < x && Down > y: Prio 2
-        # If UP > x && Down > y: Prio 3
-        # TODO: Consider special file I/o priorities (since they can eat as much bandwidth as possible)
+        # If Up > x && Down > y: Prio 3
+        # TODO: Consider special file I/O priorities (since they can use as much as possible)
 
 
 # Strip unit, standardize to Kbps
@@ -87,13 +99,16 @@ def unit(measure):
         ret = float(measure.strip("Kb"))
         return ret
     elif "b" in measure:
-        ret = float(measure.strip("b")) / 1024
+        ret = float(measure.strip("b"))
         return ret
 
 
 def main():
-    flow()
-    priority()
+    if flow() != -1:
+        priority()
+    else:
+        print("No data found")
+
 
 if __name__ == '__main__':
     main()
