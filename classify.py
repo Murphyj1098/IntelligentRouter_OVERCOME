@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3.8
 
+import logging
 import re
 import subprocess
 from time import sleep
@@ -9,8 +10,9 @@ from time import sleep
 def flow():
     # Run iftop
     # Arguments: -t, text mode (remove ncurses)
-    #            -c, configuration input file
+    #            -c <file>, configuration input file
     #            -s #, measure for # seconds
+    #            -i <network interface>, interface to listen on
     #
     # Redirect stderr to /dev/null
     # Take stdout output and split each line into list
@@ -53,7 +55,7 @@ def flow():
     #      ""      |    ""    |   ""
     for i in range(int(count/2)):
         down_list = data_list[i*2].split(" ")
-        up_list = data_list[(i*2)-1].split(" ")
+        up_list = data_list[(i*2)+1].split(" ")
 
         while '' in up_list:
             up_list.remove('')
@@ -80,8 +82,7 @@ def priority():
     for ip in host_list:
         bandwidth = host_dict[ip]
 
-        print (ip)
-        print(bandwidth)
+        logging.info(" Host: %s; Upload: %.2fKbps, Download: %.2fKbps", ip, bandwidth[0], bandwidth[1])
 
         # If Up < x && Down < y: Prio 0
         # If Up > x && Down < y: Prio 1
@@ -107,9 +108,13 @@ def main():
     if flow() != -1:
         priority()
     else:
-        print("No data found")
+        logging.info(" No data found")
 
 
 if __name__ == '__main__':
+    # Setup logging
+    logging.basicConfig(filename="classify.log", filemode='a', level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    
     main()
 
