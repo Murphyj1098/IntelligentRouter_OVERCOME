@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3.8
 
-import subprocess
-from time import sleep
+import os
+import xml.etree.ElementTree as ET
 
 def main():
     
@@ -11,7 +11,16 @@ def main():
     # 4. Remove /tmp/config.cache (Reloads config file)
     # 5. Run /etc/rc.filter_configure (Reloads pfsense firewall)
 
+    tree = ET.parse('/conf/config.xml')
+    root = tree.getroot()
 
+    for queue in root.findall('./dnshaper/queue'):
+        queue[5][0][0].text = '100'
+
+    tree.write('/conf/config.xml')
+
+    os.system('rm /tmp/config.cache')
+    os.system('/etc/rc.filter_configure')
 
 
 if __name__ == '__main__':
