@@ -13,10 +13,11 @@ def flow():
     #            -c <file>, configuration input file
     #            -s #, measure for # seconds
     #            -i <network interface>, interface to listen on
+    #            -L #, number of lines to display
     #
     # Redirect stderr to /dev/null
     # Take stdout output and split each line into list
-    iftop = "iftop -t -c .iftoprc -s 3"
+    iftop = "iftop -t -c .iftoprc -s 3 -L 35 -i ix0"
     proc_out = subprocess.run(args=iftop, shell=True, universal_newlines=True,
         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     top_list = proc_out.stdout.split("\n")
@@ -25,7 +26,7 @@ def flow():
     data_list = []
 
     for i in range(len(top_list)):
-        if re.search('^   [0-9]', top_list[i]):
+        if re.search('^ {1,3}[0-9]', top_list[i]):
             data_list.append(top_list[i])
             data_list.append(top_list[i+1])
             i+1
