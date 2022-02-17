@@ -3,7 +3,6 @@
 import logging
 import re
 import subprocess
-from time import sleep
 
 
 # Get bandwidth data from iftop and parse
@@ -19,7 +18,7 @@ def flow():
     # Take stdout output and split each line into list
     iftop = "iftop -t -c .iftoprc -s 3 -L 35 -i ix0"
     proc_out = subprocess.run(args=iftop, shell=True, universal_newlines=True,
-        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                              stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     top_list = proc_out.stdout.split("\n")
 
     # Trim list to only contain relevant lines of data (data with per IP bandwidth)
@@ -28,17 +27,16 @@ def flow():
     for i in range(len(top_list)):
         if re.search('^ {1,3}[0-9]', top_list[i]):
             data_list.append(top_list[i])
-            data_list.append(top_list[i+1])
-            i+1
+            data_list.append(top_list[i + 1])
+            i + 1
 
     # Count = 2 * number of hosts
     # Two lines per host (one upload, one download)
     count = len(data_list)
-    
+
     # If list is empty, no data to work on
     if count < 2:
         return -1
-
 
     # Dictionary to hold host information, in-coming, and out-going traffic
     global host_dict
@@ -54,16 +52,16 @@ def flow():
     #   <ip_addr>  |   Mbps   |  Mbps
     #   <ip_addr>  |   Mbps   |  Mbps
     #      ""      |    ""    |   ""
-    for i in range(int(count/2)):
-        down_list = data_list[i*2].split(" ")
-        up_list = data_list[(i*2)+1].split(" ")
+    for i in range(int(count / 2)):
+        down_list = data_list[i * 2].split(" ")
+        up_list = data_list[(i * 2) + 1].split(" ")
 
         while '' in up_list:
             up_list.remove('')
 
         while '' in down_list:
             down_list.remove('')
-        
+
         host_ip = up_list[0]
         up_rate = up_list[2]
         down_rate = down_list[3]
@@ -115,7 +113,6 @@ def main():
 if __name__ == '__main__':
     # Setup logging
     logging.basicConfig(filename="classify.log", filemode='a', level=logging.DEBUG,
-        format='%(asctime)s - %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-    
-    main()
+                        format='%(asctime)s - %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
+    main()
