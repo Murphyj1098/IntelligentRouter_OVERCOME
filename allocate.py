@@ -5,17 +5,18 @@ import xml.etree.ElementTree as ET
 
 
 # Standard amount by which bandwidth should be raised or lowered (Kbps)
+# NOTE: Should these be different for each priority?
 incrementAmount = 10
 decrementAmount = 10
 
-configFile = 'config.xml'         # pfSense XML setting file (TODO: Restore this path to '/conf/config.xml')
+configFile = 'config.xml'       # pfSense XML setting file (FIXME: Restore this path to '/conf/config.xml')
 classifyFile = 'classData.csv'  # classify script output file
 
 
 def readClassifyData():
 
     # Read data from classification script
-    # Dictionary {Key: Value} where Key is <ip address> and Value is (Priority, Trend)
+    # Dictionary {Key: Value} where Key is <ip address> and Value is (Priority, ###) NOTE: average over 5 samples? (~30 seconds at one sample per 6 seconds)
 
     classifyData = {}
 
@@ -73,8 +74,12 @@ def writeXML(newBW):
     tree = ET.parse(configFile)
     root = tree.getroot()
 
+
+    # TODO: Name of limiter can't be just <IP Address>, Adjust code to create dict key from limiter name
     for queue in root.findall('./dnshaper/queue'):
-        ip = queue[0].text
+        ip_end = queue[0].text
+        ip = "63.76.254.%s" % ip_end
+        print(ip)
         try:
             queue[5][0][0].text = newBW[ip]
         except KeyError:  # Skip queue if corresponding IP is not in dictionary
@@ -89,6 +94,7 @@ def reloadFirewall():
 
     # 1. Remove /tmp/config.cache (Reloads config file)
     # 2. Run /etc/rc.filter_configure (Reloads pfsense firewall)
+
     os.system('rm /tmp/config.cache')
     os.system('/etc/rc.filter_configure')
 
@@ -105,7 +111,7 @@ def main():
 
     currAllots = readXML()
     classData = readClassifyData()
-    newBW = genBWList(currAllots, classData)
+    # newBW = genBWList(currAllots, classData)
     writeXML(newBW)
     # reloadFirewall()
 
