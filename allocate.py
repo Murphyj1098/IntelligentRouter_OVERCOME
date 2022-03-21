@@ -16,8 +16,8 @@ classifyFile = 'classData.csv'  # classify script output file
 def readClassifyData():
 
     # Read data from classification script
-    # Dictionary {Key: Value} where Key is <ip address> and Value is (Priority, ###) NOTE: average over 5 samples? (~30 seconds at one sample per 6 seconds)
-
+    # Dictionary {Key: Value} where Key is <ip address> and Value is (Priority, ###) NOTE: should included data be average over 5 samples? (~30 seconds at one sample per 6 seconds)
+    # NOTE: How does Upload vs. Download account into this? (Need upload value for priority even if not limiting upload speeds)
     classifyData = {}
 
     with open(classifyFile) as csvFile:
@@ -30,7 +30,7 @@ def readClassifyData():
 
 def readXML():
 
-    # Get current bandwidth allocations
+    # Get current download bandwidth allocations from limiters
 
     tree = ET.parse(configFile)
     root = tree.getroot()
@@ -38,7 +38,10 @@ def readXML():
     currBW = {}
 
     for queue in root.findall('./dnshaper/queue'):
-        ip = queue[0].text
+        ip_end = queue[0].text
+        if len(ip_end) > 5: # Catch limiters not named _# (where # is last octet of IP address)
+            continue
+        ip = "63.76.254.%s" % ip_end[1:]
         bw = queue[5][0][0].text
 
         currBW[ip] = bw
@@ -48,7 +51,7 @@ def readXML():
 
 def genBWList(currentAllocation, classifyData):
 
-    # Generate dictionary of IP : New Bandwidth Amount
+    # Generate dictionary of IP : New Bandwidth Amount (In Kbps)
 
     newBWList = {}
 
@@ -74,12 +77,11 @@ def writeXML(newBW):
     tree = ET.parse(configFile)
     root = tree.getroot()
 
-
-    # TODO: Name of limiter can't be just <IP Address>, Adjust code to create dict key from limiter name
     for queue in root.findall('./dnshaper/queue'):
         ip_end = queue[0].text
-        ip = "63.76.254.%s" % ip_end
-        print(ip)
+        if len(ip_end) > 5: # Catch limiters not named _# (where # is last octet of IP address)
+            continue
+        ip = "63.76.254.%s" % ip_end[1:]
         try:
             queue[5][0][0].text = newBW[ip]
         except KeyError:  # Skip queue if corresponding IP is not in dictionary
@@ -111,7 +113,7 @@ def main():
 
     currAllots = readXML()
     classData = readClassifyData()
-    # newBW = genBWList(currAllots, classData)
+    newBW = genBWList(currAllots, classData)
     writeXML(newBW)
     # reloadFirewall()
 
