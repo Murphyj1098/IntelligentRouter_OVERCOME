@@ -78,15 +78,27 @@ def flow():
 
 # Classify each host's priority
 def priority():
+
+    global prio_dict
+    prio_dict = {}
+
+    prio = 5
+
     for ip in host_list:
         bandwidth = host_dict[ip]
 
-        logging.info(" Host: %s; Upload: %.2fKbps, Download: %.2fKbps", ip, bandwidth[0], bandwidth[1])
+        if bandwidth[0] < 200.0 and bandwidth[1] < 5000.0:
+            prio = 0
+        elif bandwidth[0] > 200.0 and bandwidth[1] < 5000.0:
+            prio = 1
+        elif bandwidth[0] < 200.0 and bandwidth[1] > 5000.0:
+            prio = 2
+        elif bandwidth[0] > 200.0 and bandwidth[1] > 5000.0:
+            prio = 3
 
-        # If Up < x && Down < y: Prio 0
-        # If Up > x && Down < y: Prio 1
-        # If Up < x && Down > y: Prio 2
-        # If Up > x && Down > y: Prio 3
+        prio_dict[ip] = prio
+
+        logging.info(" Host: %s; Upload: %.2fKbps, Download: %.2fKbps, Priority: %d", ip, bandwidth[0], bandwidth[1], prio)
 
 
 # Strip unit, standardize to Kbps
@@ -111,4 +123,12 @@ def main():
 
 
 if __name__ == '__main__':
+
+    date = datetime.date.today()
+    logFileName = "./Logs/{today}.log".format(today=date)
+
+    # Setup logging
+    logging.basicConfig(filename=logFileName, filemode='a', level=logging.DEBUG,
+                        format='%(asctime)s - %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
     main()

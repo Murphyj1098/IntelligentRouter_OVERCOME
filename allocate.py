@@ -8,7 +8,11 @@ import xml.etree.ElementTree as ET
 incrementAmount = 1000
 decrementAmount = 1000
 
-# Max bandwidth (in Kbps)
+# Individual Host max BW and min BW (Kbps)
+minHost = 10
+maxHost = 250
+
+# Max bandwidth (Kbps)
 maxNetworkBandwidth = 25000 * 30
 
 configFile = 'config.xml'       # pfSense XML setting file (FIXME: Restore this path to '/conf/config.xml')
