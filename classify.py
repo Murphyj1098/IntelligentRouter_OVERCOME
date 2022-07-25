@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3.8
-
+import datetime
 import logging
 import re
 import subprocess
@@ -16,7 +16,7 @@ def flow():
     #
     # Redirect stderr to /dev/null
     # Take stdout output and split each line into list
-    iftop = "iftop -t -c .iftoprc -s 3 -L 35 -i ix0"
+    iftop = "iftop -t -c .iftoprc -s 3 -L 35 -i igb1"
     proc_out = subprocess.run(args=iftop, shell=True, universal_newlines=True,
                               stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     top_list = proc_out.stdout.split("\n")
@@ -87,7 +87,6 @@ def priority():
         # If Up > x && Down < y: Prio 1
         # If Up < x && Down > y: Prio 2
         # If Up > x && Down > y: Prio 3
-        # TODO: Consider special file I/O priorities (since they can use as much as possible)
 
 
 # Strip unit, standardize to Kbps
@@ -111,8 +110,12 @@ def main():
 
 
 if __name__ == '__main__':
+
+    date = datetime.date.today()
+    logFileName = "./ClassifyLogs/{today}_classify.log".format(today=date)
+
     # Setup logging
-    logging.basicConfig(filename="classify.log", filemode='a', level=logging.DEBUG,
+    logging.basicConfig(filename=logFileName, filemode='a', level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
     main()
