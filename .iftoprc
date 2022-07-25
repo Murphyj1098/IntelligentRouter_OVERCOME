@@ -2,6 +2,6 @@ hide-source: yes
 hide-destination: no
 dns-resolution: no
 port-resolution: no
-promiscuous: no
+promiscuous: yes
 port-display: off
 show-totals: no

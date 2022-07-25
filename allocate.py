@@ -1,13 +1,15 @@
-#!/usr/local/bin/python3.8
+#!/bin/python3.8
 import csv
 import os
 import xml.etree.ElementTree as ET
 
 
 # Standard amount by which bandwidth should be raised or lowered (Kbps)
-# NOTE: Should these be different for each priority?
-incrementAmount = 10
-decrementAmount = 10
+incrementAmount = 1000
+decrementAmount = 1000
+
+# Max bandwidth (in Kbps)
+maxNetworkBandwidth = 25000 * 30
 
 configFile = 'config.xml'       # pfSense XML setting file (FIXME: Restore this path to '/conf/config.xml')
 classifyFile = 'classData.csv'  # classify script output file
@@ -16,8 +18,7 @@ classifyFile = 'classData.csv'  # classify script output file
 def readClassifyData():
 
     # Read data from classification script
-    # Dictionary {Key: Value} where Key is <ip address> and Value is (Priority, ###) NOTE: should included data be average over 5 samples? (~30 seconds at one sample per 6 seconds)
-    # NOTE: How does Upload vs. Download account into this? (Need upload value for priority even if not limiting upload speeds)
+    # Dictionary {Key: Value} where Key is <ip address> and Value is (Priority, )
     classifyData = {}
 
     with open(classifyFile) as csvFile:
@@ -39,7 +40,7 @@ def readXML():
 
     for queue in root.findall('./dnshaper/queue'):
         ip_end = queue[0].text
-        if len(ip_end) > 5: # Catch limiters not named _# (where # is last octet of IP address)
+        if len(ip_end) > 5:  # Catch limiters not named _# (where # is last octet of IP address)
             continue
         ip = "63.76.254.%s" % ip_end[1:]
         bw = queue[5][0][0].text
@@ -57,6 +58,10 @@ def genBWList(currentAllocation, classifyData):
 
     # TODO: This needs intelligence (where does bandwidth come from/go to)
     for key in currentAllocation:
+
+        if key not in classifyData:
+            continue
+
         if classifyData[key][1] == "up":
             newBWList[key] = str(int(currentAllocation[key]) + incrementAmount)
         elif classifyData[key][1] == "down":
@@ -79,7 +84,7 @@ def writeXML(newBW):
 
     for queue in root.findall('./dnshaper/queue'):
         ip_end = queue[0].text
-        if len(ip_end) > 5: # Catch limiters not named _# (where # is last octet of IP address)
+        if len(ip_end) > 5:  # Catch limiters not named _# (where # is last octet of IP address)
             continue
         ip = "63.76.254.%s" % ip_end[1:]
         try:

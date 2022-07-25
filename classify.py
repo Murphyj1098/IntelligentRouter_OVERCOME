@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3.8
+#!/bin/python3.8
 import datetime
 import logging
 import re
@@ -16,7 +16,7 @@ def flow():
     #
     # Redirect stderr to /dev/null
     # Take stdout output and split each line into list
-    iftop = "iftop -t -c .iftoprc -s 3 -L 35 -i igb1"
+    iftop = "iftop -t -c .iftoprc -s 3 -L 35 -i ens18"
     proc_out = subprocess.run(args=iftop, shell=True, universal_newlines=True,
                               stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     top_list = proc_out.stdout.split("\n")
@@ -103,6 +103,7 @@ def unit(measure):
 
 
 def main():
+
     if flow() != -1:
         priority()
     else:
@@ -110,12 +111,4 @@ def main():
 
 
 if __name__ == '__main__':
-
-    date = datetime.date.today()
-    logFileName = "./ClassifyLogs/{today}_classify.log".format(today=date)
-
-    # Setup logging
-    logging.basicConfig(filename=logFileName, filemode='a', level=logging.DEBUG,
-                        format='%(asctime)s - %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-
     main()
