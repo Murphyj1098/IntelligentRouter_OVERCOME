@@ -1,4 +1,4 @@
-#!/bin/python3.8
+#!/usr/local/bin/python3.8
 import csv
 import datetime
 import logging
@@ -11,7 +11,7 @@ incrementAmount = 2500
 decrementAmount = 1000
 
 # Individual Host max BW and min BW (Kbps)
-minHost = 5000
+minHost = 7500
 maxHost = 100000
 
 # Max bandwidth (Kbps)

@@ -1,4 +1,4 @@
-#!/bin/python3.8
+#!/usr/local/bin/python3.8
 import datetime
 import logging
 import re
@@ -98,7 +98,7 @@ def priority():
 
         prio_dict[ip] = prio
 
-        logging.info(" Host: %s; Upload: %.2fKbps, Download: %.2fKbps, Priority: %d", ip, bandwidth[0], bandwidth[1], prio)
+        logging.info(" CLASSIFY -- Host: %s; Upload: %.2fKbps, Download: %.2fKbps, Priority: %d", ip, bandwidth[0], bandwidth[1], prio)
 
 
 # Strip unit, standardize to Kbps
@@ -123,7 +123,7 @@ def main():
         return host_dict
 
     else:
-        logging.info(" No data found")
+        logging.info(" CLASSIFY -- No data found")
 
 
 if __name__ == '__main__':
