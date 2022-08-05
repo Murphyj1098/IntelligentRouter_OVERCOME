@@ -63,18 +63,19 @@ def genBWList(currentAllocation, classifyData):
 
     for key in currentAllocation:
 
-        if key not in classifyData:
+        if classifyData is None or key not in classifyData:
             # Assume no reading means no usage
-            # newBWList[key] = str(int(currentAllocation[key]) - decrementAmount)
-            # logging.info("Host: %s; Decrease cap; New Cap: %s", key, newBWList[key])
+            if int(currentAllocation[key]) > minHost:
+                newBWList[key] = str(int(currentAllocation[key]) - decrementAmount)
+                logging.info("Host: %s; Decrease cap; New Cap: %s", key, newBWList[key])
             continue
 
         downloadVal = classifyData[key][1]
 
-        if downloadVal > (int(currentAllocation[key]) * 0.95):
+        if downloadVal > (int(currentAllocation[key]) * 0.95) and int(currentAllocation[key]) < maxHost:
             newBWList[key] = str(int(currentAllocation[key]) + incrementAmount)
             logging.info(" Host: %s; Increase cap; New Cap: %s", key, newBWList[key])
-        elif downloadVal < (int(currentAllocation[key]) * 0.50):
+        elif downloadVal < (int(currentAllocation[key]) * 0.50) and int(currentAllocation[key]) > minHost:
             newBWList[key] = str(int(currentAllocation[key]) - decrementAmount)
             logging.info(" Host: %s; Decrease cap; New Cap: %s", key, newBWList[key])
         else:
