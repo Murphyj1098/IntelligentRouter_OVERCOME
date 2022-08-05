@@ -16,7 +16,7 @@ def flow():
     #
     # Redirect stderr to /dev/null
     # Take stdout output and split each line into list
-    iftop = "iftop -t -c .iftoprc -s 3 -L 35 -i ens18"
+    iftop = "iftop -t -c .iftoprc -s 3 -L 35 -i ens18"  # (FIXME: Change network interface to correct value)
     proc_out = subprocess.run(args=iftop, shell=True, universal_newlines=True,
                               stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     top_list = proc_out.stdout.split("\n")

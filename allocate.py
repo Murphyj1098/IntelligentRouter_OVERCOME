@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 
 # Standard amount by which bandwidth should be raised or lowered (Kbps)
-incrementAmount = 1000
+incrementAmount = 2500
 decrementAmount = 1000
 
 # Individual Host max BW and min BW (Kbps)
@@ -48,7 +48,7 @@ def readXML():
         ip_end = queue[0].text
         if len(ip_end) > 5:  # Catch limiters not named _# (where # is last octet of IP address)
             continue
-        ip = "192.168.50.%s" % ip_end[1:]
+        ip = "192.168.50.%s" % ip_end[1:]  # (FIXME: Restore start of IP address to appropriate value)
         bw = queue[5][0][0].text
 
         currBW[ip] = bw
@@ -67,20 +67,20 @@ def genBWList(currentAllocation, classifyData):
             # Assume no reading means no usage
             if int(currentAllocation[key]) > minHost:
                 newBWList[key] = str(int(currentAllocation[key]) - decrementAmount)
-                logging.info("Host: %s; Decrease cap; New Cap: %s", key, newBWList[key])
+                logging.info(" ALLOCATE -- Host: %s; Decrease cap, New Cap: %s", key, newBWList[key])
             continue
 
         downloadVal = classifyData[key][1]
 
         if downloadVal > (int(currentAllocation[key]) * 0.95) and int(currentAllocation[key]) < maxHost:
             newBWList[key] = str(int(currentAllocation[key]) + incrementAmount)
-            logging.info(" Host: %s; Increase cap; New Cap: %s", key, newBWList[key])
+            logging.info(" ALLOCATE -- Host: %s; Increase cap, New Cap: %s", key, newBWList[key])
         elif downloadVal < (int(currentAllocation[key]) * 0.50) and int(currentAllocation[key]) > minHost:
             newBWList[key] = str(int(currentAllocation[key]) - decrementAmount)
-            logging.info(" Host: %s; Decrease cap; New Cap: %s", key, newBWList[key])
+            logging.info(" ALLOCATE -- Host: %s; Decrease cap, New Cap: %s", key, newBWList[key])
         else:
             newBWList[key] = currentAllocation[key]
-            logging.info(" Host: %s; No change; New Cap: %s", key, newBWList[key])
+            logging.info(" ALLOCATE -- Host: %s; No change, New Cap: %s", key, newBWList[key])
 
     return newBWList
 
@@ -99,7 +99,7 @@ def writeXML(newBW):
         ip_end = queue[0].text
         if len(ip_end) > 5:  # Catch limiters not named _# (where # is last octet of IP address)
             continue
-        ip = "192.168.50.%s" % ip_end[1:]
+        ip = "192.168.50.%s" % ip_end[1:]  # (FIXME: Restore start of IP address to appropriate value)
         try:
             queue[5][0][0].text = newBW[ip]
         except KeyError:  # Skip queue if corresponding IP is not in dictionary
@@ -131,7 +131,7 @@ def main(classData):
     currAllots = readXML()
     newBW = genBWList(currAllots, classData)
     writeXML(newBW)
-    # reloadFirewall()
+    reloadFirewall()
 
     return 0
 

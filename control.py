@@ -16,9 +16,9 @@ if __name__ == '__main__':
                         format='%(asctime)s - %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
     nextStart = time.monotonic()
-    delta = 10  # 10 seconds between runs (time to perform all data collection and processing)
+    delta = 7.5  # 7.5 seconds between runs (time to perform all data collection and processing)
 
-    for i in range(6):
+    for i in range(8):
         nextStart = nextStart + delta
 
         # Classify code here
@@ -28,6 +28,6 @@ if __name__ == '__main__':
         allocate.main(classData)
 
         # Wait until next classify time
-        if i != 5:
+        if i != 7:
             while nextStart > time.monotonic():
                 time.sleep(0.1)
