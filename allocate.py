@@ -1,5 +1,7 @@
 #!/bin/python3.8
 import csv
+import datetime
+import logging
 import os
 import xml.etree.ElementTree as ET
 
@@ -9,8 +11,8 @@ incrementAmount = 1000
 decrementAmount = 1000
 
 # Individual Host max BW and min BW (Kbps)
-minHost = 10
-maxHost = 250
+minHost = 5000
+maxHost = 100000
 
 # Max bandwidth (Kbps)
 maxNetworkBandwidth = 25000 * 30
@@ -22,7 +24,7 @@ classifyFile = 'classData.csv'  # classify script output file
 def readClassifyData():
 
     # Read data from classification script
-    # Dictionary {Key: Value} where Key is <ip address> and Value is (Priority, )
+    # Dictionary {Key: Value} where Key is <ip address> and Value is (Upload, Download)
     classifyData = {}
 
     with open(classifyFile) as csvFile:
@@ -46,7 +48,7 @@ def readXML():
         ip_end = queue[0].text
         if len(ip_end) > 5:  # Catch limiters not named _# (where # is last octet of IP address)
             continue
-        ip = "63.76.254.%s" % ip_end[1:]
+        ip = "192.168.50.%s" % ip_end[1:]
         bw = queue[5][0][0].text
 
         currBW[ip] = bw
@@ -57,21 +59,27 @@ def readXML():
 def genBWList(currentAllocation, classifyData):
 
     # Generate dictionary of IP : New Bandwidth Amount (In Kbps)
-
     newBWList = {}
 
-    # TODO: This needs intelligence (where does bandwidth come from/go to)
     for key in currentAllocation:
 
         if key not in classifyData:
+            # Assume no reading means no usage
+            # newBWList[key] = str(int(currentAllocation[key]) - decrementAmount)
+            # logging.info("Host: %s; Decrease cap; New Cap: %s", key, newBWList[key])
             continue
 
-        if classifyData[key][1] == "up":
+        downloadVal = classifyData[key][1]
+
+        if downloadVal > (int(currentAllocation[key]) * 0.95):
             newBWList[key] = str(int(currentAllocation[key]) + incrementAmount)
-        elif classifyData[key][1] == "down":
+            logging.info(" Host: %s; Increase cap; New Cap: %s", key, newBWList[key])
+        elif downloadVal < (int(currentAllocation[key]) * 0.50):
             newBWList[key] = str(int(currentAllocation[key]) - decrementAmount)
+            logging.info(" Host: %s; Decrease cap; New Cap: %s", key, newBWList[key])
         else:
             newBWList[key] = currentAllocation[key]
+            logging.info(" Host: %s; No change; New Cap: %s", key, newBWList[key])
 
     return newBWList
 
@@ -90,7 +98,7 @@ def writeXML(newBW):
         ip_end = queue[0].text
         if len(ip_end) > 5:  # Catch limiters not named _# (where # is last octet of IP address)
             continue
-        ip = "63.76.254.%s" % ip_end[1:]
+        ip = "192.168.50.%s" % ip_end[1:]
         try:
             queue[5][0][0].text = newBW[ip]
         except KeyError:  # Skip queue if corresponding IP is not in dictionary
@@ -112,16 +120,14 @@ def reloadFirewall():
     return 0
 
 
-def main():
+def main(classData):
 
     # 1. Get and store current bandwidth allocations
-    # 2. Parse input data from Classify.py (CSV file)
     # 3. Generate list of new bandwidth allocations
     # 4. Write new allocation parameters out to XML File
     # 5. Reload firewall
 
     currAllots = readXML()
-    classData = readClassifyData()
     newBW = genBWList(currAllots, classData)
     writeXML(newBW)
     # reloadFirewall()
@@ -130,4 +136,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+
+    date = datetime.date.today()
+    logFileName = "./Logs/{today}.log".format(today=date)
+
+    # Setup logging
+    logging.basicConfig(filename=logFileName, filemode='a', level=logging.DEBUG,
+                        format='%(asctime)s - %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
+    main({})

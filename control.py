@@ -1,6 +1,5 @@
 #!/bin/python3.8
 import time
-import subprocess
 import datetime
 import logging
 
@@ -23,13 +22,12 @@ if __name__ == '__main__':
         nextStart = nextStart + delta
 
         # Classify code here
-        classify.main()
+        classData = classify.main()
 
         # Allocation code here
-        allocate.main()
+        allocate.main(classData)
 
         # Wait until next classify time
         if i != 5:
             while nextStart > time.monotonic():
-                print("I'm waiting on iteration", i)
                 time.sleep(0.1)

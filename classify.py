@@ -116,8 +116,12 @@ def unit(measure):
 
 def main():
 
+    outputDict = {}
+
     if flow() != -1:
         priority()
+        return host_dict
+
     else:
         logging.info(" No data found")
 
